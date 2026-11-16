@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Translator Pro</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:sans-serif;background:#0f0f0f;color:#fff;padding:16px;max-width:650px;margin:auto}
+  h2{text-align:center;margin:5px 0 15px}
+  textarea{width:100%;height:110px;padding:12px;font-size:16px;border-radius:12px;border:none;background:#222;color:#fff;resize:none}
+  .row{display:flex;gap:8px;margin-top:10px;align-items:center}
+  select{flex:1;padding:12px;border-radius:10px;border:none;background:#222;color:#fff;font-size:15px}
+  .swap{background:#333;color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer}
+  button.main{width:100%;padding:13px;margin-top:10px;font-size:16px;border-radius:12px;border:none;background:#25D366;font-weight:bold;cursor:pointer}
+  .box{background:#1e1e1e;padding:14px;border-radius:12px;margin-top:12px;min-height:90px;white-space:pre-wrap;line-height:1.5}
+  .tools{display:flex;gap:8px;margin-top:8px}
+  .tools button{flex:1;padding:9px;border-radius:10px;border:none;background:#333;color:#fff;cursor:pointer}
+  .badge{font-size:12px;background:#333;padding:4px 8px;border-radius:20px;color:#aaa}
+  #history{margin-top:20px}
+  .hist-item{background:#1a1a1a;padding:10px;border-radius:10px;margin-bottom:8px;cursor:pointer}
+  .hist-item small{color:#888}
+  .topbar{display:flex;justify-content:space-between;align-items:center}
+  .clear{ background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:13px }
+</style>
+</head>
+<body>
+
+<h2>🌐 AI Translator Pro</h2>
+<div style="text-align:center"><span class="badge" id="detectBadge">Auto-Detect: -</span></div>
+
+<textarea id="input" placeholder="Ketik / paste disini...&#10;Contoh: Saya mau makan nasi goreng"></textarea>
+<div style="text-align:right;font-size:12px;color:#888"><span id="charCount">0</span> karakter</div>
+
+<div class="row">
+  <select id="dari">
+    <option value="auto">🔍 Auto Detect</option>
+    <option value="id">Indonesia</option>
+    <option value="en">Inggris</option>
+    <option value="zh-CN">Mandarin</option>
+    <option value="ja">Jepang</option>
+    <option value="ko">Korea</option>
+    <option value="es">Spanyol</option>
+    <option value="fr">Perancis</option>
+  </select>
+  <button class="swap" onclick="swapLang()">⇄</button>
+  <select id="ke">
+    <option value="en">Inggris</option>
+    <option value="id">Indonesia</option>
+    <option value="zh-CN">Mandarin</option>
+    <option value="ja">Jepang</option>
+    <option value="ko">Korea</option>
+    <option value="es">Spanyol</option>
+    <option value="fr">Perancis</option>
+  </select>
+</div>
+
+<button class="main" onclick="doTranslate()">Translate ➜</button>
+
+<div class="box" id="hasil">Hasil muncul disini...</div>
+<div class="tools">
+  <button onclick="speak('input')">🔊 Bacain Asli</button>
+  <button onclick="speak('hasil')">🔊 Bacain Hasil</button>
+  <button onclick="copyHasil()">📋 Copy</button>
+</div>
+
+<div id="history">
+  <div class="topbar"><b>🕒 History</b><button class="clear" onclick="clearHistory()">Hapus Semua</button></div>
+  <div id="histList"></div>
+</div>
+
+<script>
+const inputEl = document.getElementById('input');
+const hasilEl = document.getElementById('hasil');
+let history = JSON.parse(localStorage.getItem('trans_history') || '[]');
+
+inputEl.addEventListener('input', () => {
+  document.getElementById('charCount').innerText = inputEl.value.length;
+});
+
+function swapLang() {
+  const dari = document.getElementById('dari');
+  const ke = document.getElementById('ke');
+  if (dari.value === 'auto') return alert('Matikan Auto Detect dulu buat swap');
+  const tmp = dari.value; dari.value = ke.value; ke.value = tmp;
+  // Tukar juga teksnya biar enak
+  const t = inputEl.value; inputEl.value = hasilEl.innerText !== 'Hasil muncul disini...' ? hasilEl.innerText : t;
+}
+
+async function doTranslate() {
+  const text = inputEl.value.trim();
+  const dari = document.getElementById('dari').value;
+  const ke = document.getElementById('ke').value;
+  if (!text) return hasilEl.innerText = 'Isi dulu teksnya bro';
+  hasilEl.innerText = 'Lagi translate...';
+
+  try {
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ text, dari, ke })
+    });
+    const data = await res.json();
+    hasilEl.innerText = data.translated || 'Gagal';
+
+    // Auto Detect Badge
+    if (dari === 'auto' && data.detected) {
+      document.getElementById('detectBadge').innerText = 'Auto-Detect: ' + data.detected;
+    }
+
+    // Simpan History
+    history.unshift({ from: text, to: data.translated, dari, ke, time: new Date().toLocaleTimeString() });
+    history = history.slice(0, 20);
+    localStorage.setItem('trans_history', JSON.stringify(history));
+    renderHistory();
+  } catch(e) {
+    hasilEl.innerText = 'Error: ' + e.message;
+  }
+}
+
+// Enter = translate, Shift+Enter = baris baru
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doTranslate(); }
+});
+
+function speak(type) {
+  const text = type === 'input' ? inputEl.value : hasilEl.innerText;
+  if (!text || text.includes('Hasil muncul')) return;
+  const dari = document.getElementById('dari').value;
+  const ke = document.getElementById('ke').value;
+  const lang = type === 'input' ? (dari === 'auto' ? 'id-ID' : dari) : ke;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang;
+  u.rate = 0.9;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+function copyHasil() {
+  navigator.clipboard.writeText(hasilEl.innerText);
+  alert('Udah ke-copy!');
+}
+
+function renderHistory() {
+  const list = document.getElementById('histList');
+  if (!history.length) { list.innerHTML = '<p style="color:#666;font-size:13px">Belum ada history</p>'; return; }
+  list.innerHTML = history.map((h,i) => `
+    <div class="hist-item" onclick="loadHist(${i})">
+      <b>${h.from.slice(0,60)}</b><br>
+      <small>➜ ${h.to.slice(0,60)} • ${h.dari} → ${h.ke} • ${h.time}</small>
+    </div>`).join('');
+}
+
+function loadHist(i) {
+  const h = history[i];
+  inputEl.value = h.from;
+  document.getElementById('dari').value = h.dari;
+  document.getElementById('ke').value = h.ke;
+  hasilEl.innerText = h.to;
+}
+
+function clearHistory() {
+  history = []; localStorage.removeItem('trans_history'); renderHistory();
+}
+
+renderHistory();
+</script>
+</body>
+</html>
