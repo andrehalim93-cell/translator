@@ -11,20 +11,42 @@ const LANG_NAMES = {
   'ja': 'Jepang', 'ko': 'Korea', 'es': 'Spanyol', 'fr': 'Perancis', 'ru': 'Rusia', 'auto': 'Auto'
 };
 
+// Biar MyMemory gak ketuker lagi, kalau isinya WARNING berarti gagal
+function isBad(text) {
+  if (!text) return true;
+  return text.toUpperCase().includes('MYMEMORY WARNING') || text.toUpperCase().includes('YOU USED ALL');
+}
+
 async function translateGoogle(text, dari, ke) {
   const sl = dari === 'auto' ? 'auto' : dari;
-  const tl = ke;
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${ke}&dt=t&q=${encodeURIComponent(text)}`;
   const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   const data = await r.json();
   if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('Google gagal');
   const translated = data[0].map(p => p && p[0] ? p[0] : '').join('');
-  const detected = data[2] || dari;
-  return { translated, detected };
+  if (isBad(translated)) throw new Error('Google bad');
+  return { translated, detected: data[2] || dari };
+}
+
+async function translateLibre(text, dari, ke) {
+  // LibreTranslate - gratis, gak ada limit harian kayak MyMemory
+  // source auto didukung, tapi kita map id -> id, zh-CN -> zh
+  const mapLang = (l) => {
+    if (l === 'auto') return 'auto';
+    if (l === 'zh-CN') return 'zh';
+    return l;
+  };
+  const r = await fetch('https://translate.argosopentech.com/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: text, source: mapLang(dari), target: mapLang(ke), format: 'text' })
+  });
+  const data = await r.json();
+  if (!data.translatedText || isBad(data.translatedText)) throw new Error('Libre gagal');
+  return { translated: data.translatedText, detected: dari };
 }
 
 async function translateMyMemory(text, dari, ke) {
-  // MyMemory gak support auto, jadi kita tebak kasar aja
   let src = dari;
   if (src === 'auto') {
     if (/[\u4E00-\u9FFF]/.test(text)) src = 'zh-CN';
@@ -36,27 +58,31 @@ async function translateMyMemory(text, dari, ke) {
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${ke}`;
   const r = await fetch(url);
   const data = await r.json();
-  return { translated: data.responseData?.translatedText || '', detected: src };
+  const translated = data.responseData?.translatedText || '';
+  if (isBad(translated)) throw new Error('MyMemory limit habis');
+  return { translated, detected: src };
 }
 
 app.post('/api/translate', async (req, res) => {
   const { text, dari, ke } = req.body;
-  try {
-    let result;
+  const methods = [translateGoogle, translateLibre, translateMyMemory];
+  let lastError = 'Semua API gagal';
+  for (const fn of methods) {
     try {
-      result = await translateGoogle(text, dari, ke);
+      const result = await fn(text, dari, ke);
+      if (result.translated) {
+        return res.json({
+          translated: result.translated,
+          detected: LANG_NAMES[result.detected] || result.detected,
+          detectedCode: result.detected
+        });
+      }
     } catch (e) {
-      console.log('Google gagal, pindah ke MyMemory:', e.message);
-      result = await translateMyMemory(text, dari, ke);
+      console.log(fn.name, 'gagal:', e.message);
+      lastError = e.message;
     }
-    res.json({
-      translated: result.translated || '',
-      detected: LANG_NAMES[result.detected] || result.detected,
-      detectedCode: result.detected
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message, translated: '' });
   }
+  res.status(500).json({ error: lastError, translated: '' });
 });
 
 app.get('/', (req, res) => {
