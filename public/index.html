@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Translator Pro - Tororo</title>
+<title>AI Translator Pro - Tororo Live2D</title>
 <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.19.0/dist/index.js"></script>
 <script src="https://unpkg.com/wanakana@4.0.2/umd/wanakana.min.js"></script>
-<!-- PIXI + LIVE2D - BUAT TORORO ASLI -->
-<script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.2/dist/browser/pixi.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/index.min.js"></script>
+<!-- LIVE2D WIDGET ASLI - SAMA KAYAK SHIZUKU -->
+<script src="https://unpkg.com/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#08080f;color:#fff;min-height:100vh}
@@ -18,14 +17,16 @@
   .logo b{font-size:17px}.logo small{color:#9ca3af;font-size:11px;display:block}
   .icon-btn{width:40px;height:40px;border-radius:12px;background:#1e1e2e;border:1px solid rgba(255,255,255,.1);color:#fff;font-size:18px;cursor:pointer}
   .container{max-width:650px;margin:auto;padding:16px;padding-bottom:40px}
-  /* ===== CARD TORORO LIVE2D - DI ATAS, BUKAN POJOK KANAN BAWAH ===== */
-  .ai-card{background:linear-gradient(135deg,#1e1b4b,#0e7490);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:10px 16px 0;display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;position:relative;overflow:hidden;min-height:190px}
-  .live2d-wrap{width:140px;min-width:140px;height:190px;position:relative;display:flex;align-items:flex-end;justify-content:center;z-index:1;cursor:pointer;transition:opacity .3s,width .3s,min-width .3s}
-  .live2d-wrap.hidden-live2d{opacity:0;width:0;min-width:0;overflow:hidden;pointer-events:none}
-  #tororoCanvas{width:140px;height:190px;display:block;cursor:pointer}
-  .live2d-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;background:rgba(0,0,0,.2);border-radius:12px;text-align:center;padding:10px}
-  .live2d-wrap.dancing #tororoCanvas{animation:jogetLive2d .5s infinite}
-  @keyframes jogetLive2d{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-10px) rotate(-4deg)}50%{transform:translateY(0) rotate(4deg)}75%{transform:translateY(-6px) rotate(-2deg)}}
+  /* CARD TORORO - DI ATAS */
+  .ai-card{background:linear-gradient(135deg,#1e1b4b,#0e7490);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:10px 16px 0;display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;position:relative;overflow:hidden;min-height:200px}
+  .tororo-holder{width:150px;min-width:150px;height:200px;position:relative;display:flex;align-items:flex-end;justify-content:center;z-index:1;cursor:pointer;transition:opacity .3s,width .3s,min-width .3s;overflow:hidden}
+  .tororo-holder.hidden-tororo{opacity:0;width:0;min-width:0;pointer-events:none}
+  .tororo-holder.dancing{animation:joget .5s infinite}
+  @keyframes joget{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-10px) rotate(-4deg)}50%{transform:translateY(0) rotate(4deg)}75%{transform:translateY(-6px) rotate(-2deg)}}
+  /* PAKSA LIVE2D WIDGET MASUK KE CARD, BUKAN POJOK KANAN BAWAH */
+  #live2d-widget{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;top:auto!important;pointer-events:auto!important}
+  #live2d-widget canvas{width:150px!important;height:200px!important;cursor:pointer}
+  .tororo-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;text-align:center;color:#fff;z-index:0}
   .ai-info{flex:1;padding-bottom:14px;z-index:1}
   .ai-info b{font-size:15px}.ai-info p{font-size:12px;color:#cbd5e1;margin-top:4px;line-height:1.45}
   .status-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 8px #22c55e}
@@ -68,15 +69,15 @@
 </head>
 <body>
 <div class="header">
-  <div class="logo"><div class="logo-icon">🐱</div><div><b>AI Translator Pro</b><small>Tororo • Gemini • Google • Libre</small></div></div>
+  <div class="logo"><div class="logo-icon">🐱</div><div><b>AI Translator Pro</b><small>Tororo Live2D • Gemini • Google • Libre</small></div></div>
   <button class="icon-btn" onclick="openSetting()">⚙️</button>
 </div>
 <div class="container">
   <div class="ai-card">
-    <!-- TORORO LIVE2D DI SINI - DI ATAS, BUKAN POJOK KANAN BAWAH -->
-    <div class="live2d-wrap" id="live2dWrap" onclick="tororoClick()">
-      <canvas id="tororoCanvas" width="280" height="380"></canvas>
-      <div class="live2d-loading" id="live2dLoading">🐱 Loading Tororo...<br>Live2D asli, bentar ya</div>
+    <!-- TORORO LIVE2D - TEMPAT HARU TADI -->
+    <div class="tororo-holder" id="tororoHolder" onclick="tororoClick()">
+      <div class="tororo-loading" id="tororoLoading">🐱 Loading Tororo...</div>
+      <!-- Live2D Widget bakal dipindahin ke sini lewat JS -->
     </div>
     <div class="ai-info">
       <b><span class="status-dot"></span> Tororo - AI Translator</b>
@@ -105,117 +106,58 @@
   <div class="sheet"><h3>⚙️ Setting</h3><p>Atur API Key lu disini.</p><div class="divider"></div><b style="font-size:14px">🔑 Gemini API Key</b><p>Bikin gratis di <b style="color:#fff">aistudio.google.com</b></p><input id="geminiKey" type="password" placeholder="Paste AIzaSy... disini" /><div class="row-btn"><button class="btn-save" onclick="saveKey()">Simpan Key</button><button class="btn-close" onclick="closeSetting()">Tutup</button></div><div class="key-status" id="keyStatus"></div></div>
 </div>
 <script>
-// ===== LIVE2D TORORO - BUKAN CSS =====
-let tororoModel = null;
-let tororoApp = null;
-async function initTororo(){
-  try{
-    const canvas = document.getElementById('tororoCanvas');
-    tororoApp = new PIXI.Application({ view: canvas, transparent: true, autoStart: true, width: 280, height: 380 });
-    // MODEL ASLI TORORO - Live2D
-    const urls = [
-      'https://cdn.jsdelivr.net/npm/live2d-widget-model-tororo@1.0.5/assets/tororo.model.json',
-      'https://cdn.jsdelivr.net/gh/guansss/pixi-live2d-display/test/assets/tororo/tororo.model.json',
-      'https://unpkg.com/live2d-widget-model-tororo@1.0.5/assets/tororo.model.json'
-    ];
-    let loaded = null;
-    for(const url of urls){
-      try{ loaded = await PIXI.live2d.Live2DModel.from(url); break; }catch(e){ console.log('Tororo gagal di', url); }
+// ===== TORORO LIVE2D - PAKE LINK YANG LU BILANG BISA =====
+window.addEventListener('load', function(){
+  L2Dwidget.init({
+    model: {
+      // LINK YANG UDAH LU CEK BISA
+      jsonPath: "https://unpkg.com/live2d-widget-model-tororo@1.0.5/assets/tororo.model.json"
+    },
+    display: { position: "right", width: 150, height: 200, hOffset: 0, vOffset: 0 },
+    mobile: { show: true, scale: 1 },
+    react: { opacityDefault: 1, opacityOnHover: 1 }
+  });
+  // PINDAHIN WIDGET DARI POJOK KANAN BAWAH KE CARD ATAS
+  let tries = 0;
+  const mover = setInterval(()=>{
+    tries++;
+    const w = document.getElementById('live2d-widget');
+    const holder = document.getElementById('tororoHolder');
+    const loading = document.getElementById('tororoLoading');
+    if(w && holder){
+      holder.appendChild(w);
+      w.style.position = 'relative';
+      w.style.left = 'auto'; w.style.right = 'auto'; w.style.bottom = 'auto'; w.style.top = 'auto';
+      if(loading) loading.style.display = 'none';
+      clearInterval(mover);
+      // Klik canvas Tororo = nyapa juga
+      const cv = w.querySelector('canvas');
+      if(cv){ cv.addEventListener('click', (e)=>{ e.stopPropagation(); tororoClick(); }); }
     }
-    if(!loaded) throw new Error('Semua CDN gagal');
-    tororoModel = loaded;
-    tororoModel.scale.set(0.32);
-    tororoModel.anchor.set(0.5, 0.5);
-    tororoModel.x = 140;
-    tororoModel.y = 200;
-    tororoApp.stage.addChild(tororoModel);
-    // Mata ngikutin mouse - kayak Shizuku
-    tororoApp.stage.interactive = true;
-    tororoApp.stage.on('pointermove', (e)=>{
-      if(!tororoModel) return;
-      const pos = e.data.global;
-      tororoModel.focus(pos.x, pos.y);
-    });
-    // Klik -> Tap motion Live2D asli
-    tororoModel.on('hit', (hitAreas)=>{
-      tororoTap();
-    });
-    document.getElementById('live2dLoading').style.display = 'none';
-    // Gerak idle awal
-    setTimeout(()=>{ try{ tororoModel.motion('Idle'); }catch(e){} }, 500);
-  }catch(err){
-    console.error(err);
-    document.getElementById('live2dLoading').innerHTML = '🐱 Tororo gagal load<br><small>Cek internet / CDN</small>';
-  }
-}
-function tororoTap(){
-  if(!tororoModel) return;
-  try{
-    // Coba motion yang ada di Tororo
-    const motions = tororoModel.internalModel?.motionManager?.definitions || {};
-    const groups = Object.keys(motions);
-    if(groups.length){
-      const g = groups[Math.floor(Math.random()*groups.length)];
-      tororoModel.motion(g);
-    } else {
-      tororoModel.motion('Tap');
-    }
-  }catch(e){
-    try{ tororoModel.motion('Idle'); }catch(_){}
-  }
-}
-function tororoDance(){
-  document.getElementById('live2dWrap').classList.add('dancing');
-  tororoTap();
-  setTimeout(()=>{ tororoTap(); }, 400);
-}
-function tororoStopDance(){
-  document.getElementById('live2dWrap').classList.remove('dancing');
-}
-window.addEventListener('load', initTororo);
+    if(tries > 30) clearInterval(mover);
+  }, 300);
+});
 
-// ===== SUARA + AKSI TORORO =====
+// ===== 1-4 FITUR TORORO =====
 function speakTororo(text){
-  try{
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang='id-ID'; u.rate=1.05; u.pitch=1.2;
-    speechSynthesis.speak(u);
-  }catch(e){}
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='id-ID'; u.rate=1.05; u.pitch=1.2; speechSynthesis.speak(u); }catch(e){}
 }
+function tororoDance(){ document.getElementById('tororoHolder').classList.add('dancing'); }
+function tororoStopDance(){ document.getElementById('tororoHolder').classList.remove('dancing'); }
 function tororoClick(){
   const msgs=['Meow! Hai juga!','Mewww, jangan colek-colek!','Meow! Gas translate lagi yuk!','Aku Tororo, siap bantu!'];
-  const m = msgs[Math.floor(Math.random()*msgs.length)];
-  document.getElementById('aiStatus').innerText = m;
-  tororoTap();
-  speakTororo(m);
+  const m=msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById('aiStatus').innerText=m; speakTororo(m); tororoDance(); setTimeout(tororoStopDance, 800);
 }
 function tororoAction(type){
-  if(type==='greet'){
-    document.getElementById('aiStatus').innerText='Meow! Hai juga! Mau translate apa hari ini?';
-    speakTororo('Meow! Hai juga! Mau translate apa hari ini?');
-    tororoTap();
-  }
-  if(type==='happy'){
-    document.getElementById('aiStatus').innerText='Mewww, gacor! Gas translate lagi!';
-    speakTororo('Mewww, gacor! Gas translate lagi!');
-    tororoDance(); setTimeout(tororoStopDance, 1200);
-  }
-  if(type==='think'){
-    document.getElementById('aiStatus').innerText='Hmm... Tororo lagi mikir nih... meow...';
-    tororoTap();
-  }
+  if(type==='greet'){ document.getElementById('aiStatus').innerText='Meow! Hai juga! Mau translate apa hari ini?'; speakTororo('Meow! Hai juga! Mau translate apa hari ini?'); tororoDance(); setTimeout(tororoStopDance, 800); }
+  if(type==='happy'){ document.getElementById('aiStatus').innerText='Mewww, gacor! Gas translate lagi!'; speakTororo('Mewww, gacor! Gas translate lagi!'); tororoDance(); setTimeout(tororoStopDance, 1200); }
+  if(type==='think'){ document.getElementById('aiStatus').innerText='Hmm... Tororo lagi mikir nih... meow...'; }
 }
 let tororoHidden=false;
-function toggleTororo(){
-  tororoHidden=!tororoHidden;
-  const w=document.getElementById('live2dWrap');
-  const btn=document.getElementById('hideBtn');
-  if(tororoHidden){ w.classList.add('hidden-live2d'); btn.innerText='👁️ Tampilkan'; }
-  else { w.classList.remove('hidden-live2d'); btn.innerText='👁️ Sembunyikan'; }
-}
+function toggleTororo(){ tororoHidden=!tororoHidden; const w=document.getElementById('tororoHolder'); const btn=document.getElementById('hideBtn'); if(tororoHidden){ w.classList.add('hidden-tororo'); btn.innerText='👁️ Tampilkan'; } else { w.classList.remove('hidden-tororo'); btn.innerText='👁️ Sembunyikan'; } }
 
-// ===== TRANSLATOR LOGIC - SAMA KAYAK SEBELUMNYA =====
+// ===== TRANSLATOR =====
 const inputEl=document.getElementById('input'); const chatEl=document.getElementById('chat'); const aiStatus=document.getElementById('aiStatus');
 const LANG_NAMES={'id':'Indonesia','en':'Inggris','zh':'Mandarin','zh-CN':'Mandarin','ja':'Jepang','ko':'Korea','es':'Spanyol','fr':'Perancis','auto':'Auto'};
 const LANG_FULL={'id':'Indonesian','en':'English','zh-CN':'Chinese (Simplified)','ja':'Japanese','ko':'Korean','es':'Spanish','fr':'French','auto':'Auto Detect'};
@@ -235,7 +177,7 @@ function showTyping(){ const d=document.createElement('div'); d.id='typingBubble
 async function translateGemini(text,dari,ke){ const key=localStorage.getItem('gemini_key')||''; if(!key) throw new Error('No key'); const targetLang=LANG_FULL[ke]||ke; const sourceLang=dari==='auto'?'Auto Detect':LANG_FULL[dari]; const prompt=`Translate from ${sourceLang} to ${targetLang}. Return ONLY JSON {"translation":"...","pronunciation":"..."}. If Chinese give Pinyin, if Japanese give Romaji, if Korean give Romanization, else empty. Text: """${text}"""`; const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})}); const data=await r.json(); if(data.error) throw new Error('Gemini gagal'); let raw=data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||''; raw=raw.replace(/```json|```/g,'').trim(); try{ const obj=JSON.parse(raw); if(obj.translation) return {translated:obj.translation,pronunciation:obj.pronunciation||'',detected:dari,api:'Gemini AI ✨'}; }catch(e){ if(raw) return {translated:raw,pronunciation:'',detected:dari,api:'Gemini AI ✨'}; } throw new Error('Gemini kosong'); }
 async function translateGoogle(text,dari,ke){ const sl=dari==='auto'?'auto':dari; const r=await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${ke}&dt=t&q=${encodeURIComponent(text)}`); const data=await r.json(); const translated=data[0].map(p=>p[0]).join(''); if(!translated) throw new Error('Google gagal'); return {translated,pronunciation:'',detected:data[2]||dari,api:'Google'}; }
 async function translateMyMemory(text,dari,ke){ let src=dari; if(src==='auto'){ if(/[\u4E00-\u9FFF]/.test(text)) src='zh-CN'; else if(/[\u3040-\u30FF]/.test(text)) src='ja'; else if(/[\uAC00-\uD7AF]/.test(text)) src='ko'; else if(/\b(saya|aku|mau|pergi)\b/i.test(text)) src='id'; else src='en'; } const r=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${ke}`); const data=await r.json(); const translated=data.responseData?.translatedText||''; if(!translated) throw new Error('MyMemory gagal'); return {translated,pronunciation:'',detected:src,api:'MyMemory'}; }
-async function doTranslate(){ const text=inputEl.value.trim(); const dari=document.getElementById('dari').value; const ke=document.getElementById('ke').value; if(!text) return; addUserBubble(text); inputEl.value=''; document.getElementById('charCount').innerText='0'; setAIState('thinking','Hmm, Tororo lagi mikir translate-nya... meow...'); tororoDance(); const typing=showTyping(); const methods=[translateGemini,translateGoogle,translateMyMemory]; for(const fn of methods){ try{ const result=await fn(text,dari,ke); typing.remove(); tororoStopDance(); setAIState('done','Meow! Beres! Coba baca pinyin-nya, terus pencet 🔊'); document.getElementById('detectBadge').innerText='Auto-Detect: '+(LANG_NAMES[result.detected]||result.detected); document.getElementById('apiBadge').innerText='API: '+result.api; addAIBubble(result.translated,result.api,result.detected,ke,result.pronunciation); tororoTap(); speakTororo('Meow! Beres! Ini hasil translate-nya!'); history.unshift({from:text,to:result.translated,pron:result.pronunciation||'',dari,ke,time:new Date().toLocaleTimeString()}); history=history.slice(0,20); localStorage.setItem('trans_history',JSON.stringify(history)); renderHistory(); return; }catch(e){ console.log(fn.name,'gagal'); } } typing.remove(); tororoStopDance(); setAIState('done','Semua API down, cek Setting'); }
+async function doTranslate(){ const text=inputEl.value.trim(); const dari=document.getElementById('dari').value; const ke=document.getElementById('ke').value; if(!text) return; addUserBubble(text); inputEl.value=''; document.getElementById('charCount').innerText='0'; setAIState('thinking','Hmm, Tororo lagi mikir translate-nya... meow...'); tororoDance(); const typing=showTyping(); const methods=[translateGemini,translateGoogle,translateMyMemory]; for(const fn of methods){ try{ const result=await fn(text,dari,ke); typing.remove(); tororoStopDance(); setAIState('done','Meow! Beres! Coba baca pinyin-nya, terus pencet 🔊'); document.getElementById('detectBadge').innerText='Auto-Detect: '+(LANG_NAMES[result.detected]||result.detected); document.getElementById('apiBadge').innerText='API: '+result.api; addAIBubble(result.translated,result.api,result.detected,ke,result.pronunciation); speakTororo('Meow! Beres! Ini hasil translate-nya!'); history.unshift({from:text,to:result.translated,pron:result.pronunciation||'',dari,ke,time:new Date().toLocaleTimeString()}); history=history.slice(0,20); localStorage.setItem('trans_history',JSON.stringify(history)); renderHistory(); return; }catch(e){ console.log(fn.name,'gagal'); } } typing.remove(); tororoStopDance(); setAIState('done','Semua API down, cek Setting'); }
 inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); doTranslate(); } });
 function speakText(btn){ const text=btn.closest('.content').querySelector('.trans-text').innerText; const ke=document.getElementById('ke').value; const u=new SpeechSynthesisUtterance(text); u.lang=ke==='zh-CN'?'zh-CN':ke; u.rate=0.85; speechSynthesis.cancel(); speechSynthesis.speak(u); }
 function speakPron(btn){ const text=btn.closest('.pron-box').querySelector('.pron-text').innerText; const ke=document.getElementById('ke').value; const u=new SpeechSynthesisUtterance(text); u.lang=ke==='zh-CN'?'zh-CN':ke==='ja'?'ja-JP':'en-US'; u.rate=0.75; speechSynthesis.cancel(); speechSynthesis.speak(u); }
