@@ -6,12 +6,17 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ===== TAMBAHAN BARU: HEALTH CHECK =====
+// Ini doang yang baru, sisanya sama kayak punya lu
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime(), time: new Date().toISOString() });
+});
+
 const LANG_NAMES = {
   'id': 'Indonesia', 'en': 'Inggris', 'zh-CN': 'Mandarin',
   'ja': 'Jepang', 'ko': 'Korea', 'es': 'Spanyol', 'fr': 'Perancis', 'ru': 'Rusia', 'auto': 'Auto'
 };
 
-// Biar MyMemory gak ketuker lagi, kalau isinya WARNING berarti gagal
 function isBad(text) {
   if (!text) return true;
   return text.toUpperCase().includes('MYMEMORY WARNING') || text.toUpperCase().includes('YOU USED ALL');
@@ -29,8 +34,6 @@ async function translateGoogle(text, dari, ke) {
 }
 
 async function translateLibre(text, dari, ke) {
-  // LibreTranslate - gratis, gak ada limit harian kayak MyMemory
-  // source auto didukung, tapi kita map id -> id, zh-CN -> zh
   const mapLang = (l) => {
     if (l === 'auto') return 'auto';
     if (l === 'zh-CN') return 'zh';
