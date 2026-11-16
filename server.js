@@ -11,37 +11,51 @@ const LANG_NAMES = {
   'ja': 'Jepang', 'ko': 'Korea', 'es': 'Spanyol', 'fr': 'Perancis', 'ru': 'Rusia', 'auto': 'Auto'
 };
 
+async function translateGoogle(text, dari, ke) {
+  const sl = dari === 'auto' ? 'auto' : dari;
+  const tl = ke;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const data = await r.json();
+  if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('Google gagal');
+  const translated = data[0].map(p => p && p[0] ? p[0] : '').join('');
+  const detected = data[2] || dari;
+  return { translated, detected };
+}
+
+async function translateMyMemory(text, dari, ke) {
+  // MyMemory gak support auto, jadi kita tebak kasar aja
+  let src = dari;
+  if (src === 'auto') {
+    if (/[\u4E00-\u9FFF]/.test(text)) src = 'zh-CN';
+    else if (/[\u3040-\u30FF]/.test(text)) src = 'ja';
+    else if (/[\uAC00-\uD7AF]/.test(text)) src = 'ko';
+    else if (/\b(saya|aku|mau|pergi|kerja|kantor|makan|pasar)\b/i.test(text)) src = 'id';
+    else src = 'en';
+  }
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${ke}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  return { translated: data.responseData?.translatedText || '', detected: src };
+}
+
 app.post('/api/translate', async (req, res) => {
-  let { text, dari, ke } = req.body;
+  const { text, dari, ke } = req.body;
   try {
-    // Google Translate gratis, support auto beneran
-    // dari = auto juga boleh
-    const sl = dari === 'auto' ? 'auto' : dari;
-    // Google maunya zh-CN jadi zh-CN, tapi di endpoint ini pake zh-CN tetep jalan, kita map ke zh
-    const tl = ke === 'zh-CN' ? 'zh-CN' : ke;
-
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
-    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    const data = await r.json();
-
-    // data[0] isinya potongan translate, kita gabungin
-    let translated = '';
-    if (Array.isArray(data[0])) {
-      translated = data[0].map(part => part[0]).join('');
+    let result;
+    try {
+      result = await translateGoogle(text, dari, ke);
+    } catch (e) {
+      console.log('Google gagal, pindah ke MyMemory:', e.message);
+      result = await translateMyMemory(text, dari, ke);
     }
-
-    // data[2] itu bahasa yang kedetect sama Google
-    let detectedCode = dari;
-    if (data[2]) detectedCode = data[2];
-
     res.json({
-      translated: translated,
-      detected: LANG_NAMES[detectedCode] || detectedCode,
-      detectedCode: detectedCode
+      translated: result.translated || '',
+      detected: LANG_NAMES[result.detected] || result.detected,
+      detectedCode: result.detected
     });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message, translated: '' });
   }
 });
 
