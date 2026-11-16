@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Translator Pro - Haru</title>
+<title>AI Translator Pro - Shizuku</title>
 <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.19.0/dist/index.js"></script>
 <script src="https://unpkg.com/wanakana@4.0.2/umd/wanakana.min.js"></script>
 <style>
@@ -15,44 +15,12 @@
   .logo b{font-size:17px}.logo small{color:#9ca3af;font-size:11px;display:block}
   .icon-btn{width:40px;height:40px;border-radius:12px;background:#1e1e2e;border:1px solid rgba(255,255,255,.1);color:#fff;font-size:18px;cursor:pointer}
   .container{max-width:650px;margin:auto;padding:16px;padding-bottom:40px}
-  .ai-card{background:linear-gradient(135deg,#1e1b4b,#0e7490);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:10px 16px 0;display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;position:relative;overflow:hidden}
-  /* ===== HARU V2 - LEBIH CUTE, LEBIH PREMIUM ===== */
-  .robot-wrap{width:128px;min-width:128px;height:188px;position:relative;display:flex;align-items:flex-end;justify-content:center;z-index:1}
-  .haru{position:relative;width:112px;height:172px;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 10px 18px rgba(0,0,0,.45))}
-  .haru .antenna{width:3px;height:14px;background:#cbd5e1;position:relative;z-index:0}
-  .haru .antenna::after{content:'';position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:16px;height:16px;background:radial-gradient(circle at 35% 35%, #a5f3fc, #06b6d4);border:2px solid #fff;border-radius:50%;box-shadow:0 0 14px #22d3ee;animation:blink 1.6s infinite}
-  @keyframes blink{0%,100%{opacity:1;transform:translateX(-50%) scale(1)}50%{opacity:.6;transform:translateX(-50%) scale(.85)}}
-  .haru .head{width:102px;height:82px;background:linear-gradient(180deg,#ffffff,#e0f2fe 65%,#cbd5e1);border-radius:28px;position:relative;border:2px solid rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 -6px 14px rgba(148,163,184,.25);z-index:2}
-  .haru .eyes{display:flex;gap:22px;margin-top:4px}
-  .haru .eye{width:24px;height:26px;background:radial-gradient(circle at 35% 35%, #334155, #0f172a 70%);border-radius:50%;position:relative;overflow:hidden;border:1.5px solid #e2e8f0}
-  .haru .eye::after{content:'';position:absolute;top:4px;left:5px;width:8px;height:8px;background:#fff;border-radius:50%;box-shadow:0 0 6px #fff}
-  .haru .eye::before{content:'';position:absolute;bottom:3px;right:4px;width:5px;height:5px;background:#22d3ee;border-radius:50%;opacity:.9}
-  .haru .eye{animation:kedip 4.2s infinite}
-  @keyframes kedip{0%,92%,100%{transform:scaleY(1)}94%,96%{transform:scaleY(.08)}}
-  .haru .cheek{position:absolute;top:42px;width:16px;height:11px;background:#fda4af;border-radius:50%;opacity:.75;filter:blur(.5px)}
-  .haru .cheek.l{left:7px}.haru .cheek.r{right:7px}
-  .haru .mouth{width:20px;height:7px;background:#0f172a;border-radius:20px;margin-top:9px;transition:all .15s}
-  .haru.speaking .mouth{animation:ngomong .22s infinite}
-  @keyframes ngomong{0%,100%{height:6px;width:20px;border-radius:20px}50%{height:13px;width:26px;border-radius:50%;background:#1e293b}}
-  .haru .body{width:74px;height:56px;background:linear-gradient(180deg,#8b5cf6,#4f46e5 70%,#3730a3);border-radius:18px;margin-top:-4px;position:relative;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.25);box-shadow:inset 0 2px 0 rgba(255,255,255,.35);z-index:1}
-  .haru .body::after{content:'HARU';color:#fff;font-size:10px;font-weight:900;letter-spacing:1.5px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
-  .haru .body::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:38px;height:5px;background:rgba(255,255,255,.25);border-radius:10px}
-  .haru .arm{position:absolute;top:10px;width:15px;height:46px;background:linear-gradient(180deg,#f1f5f9,#94a3b8);border-radius:12px;border:1.5px solid #e2e8f0;box-shadow:0 3px 6px rgba(0,0,0,.25)}
-  .haru .arm.l{left:-18px;transform-origin:top center;animation:lambai 2.8s ease-in-out infinite}
-  .haru .arm.r{right:-18px;transform-origin:top center;transform:rotate(8deg)}
-  .haru .arm::after{content:'';position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);width:18px;height:12px;background:#06b6d4;border-radius:50%;border:2px solid #fff}
-  @keyframes lambai{0%,100%{transform:rotate(0)}50%{transform:rotate(-28deg)}}
-  .haru .legs{display:flex;gap:16px;margin-top:2px}
-  .haru .leg{width:17px;height:20px;background:linear-gradient(180deg,#64748b,#334155);border-radius:0 0 10px 10px;border:1.5px solid #475569}
-  .robot-wrap.speaking .haru{animation:bounce .38s infinite}
-  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-  .robot-shadow{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:84px;height:10px;background:rgba(0,0,0,.4);border-radius:50%;filter:blur(5px)}
-  .ai-info{flex:1;padding-bottom:14px;z-index:1}
+  .ai-card{background:linear-gradient(135deg,#1e1b4b,#0e7490);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
   .ai-info b{font-size:15px}.ai-info p{font-size:12px;color:#cbd5e1;margin-top:4px;line-height:1.45}
   .status-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 8px #22c55e}
   .badge{font-size:11px;background:rgba(255,255,255,.15);padding:4px 8px;border-radius:20px;color:#e2e8f0;display:inline-block;margin-top:6px}
-  .robot-controls{display:flex;gap:6px;margin-top:8px}
-  .robot-controls button{padding:5px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;font-size:11px;cursor:pointer}
+  .shizuku-controls{display:flex;gap:6px;margin-top:8px}
+  .shizuku-controls button{padding:6px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;font-size:11px;cursor:pointer}
   .lang-row{display:flex;gap:8px;align-items:center;margin:12px 0}
   select{flex:1;padding:13px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:#15151f;color:#fff;font-size:14px;outline:none}
   .swap{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#06b6d4);border:none;color:#fff;font-size:19px;cursor:pointer}
@@ -92,36 +60,20 @@
 <body>
 
 <div class="header">
-  <div class="logo"><div class="logo-icon">🤖</div><div><b>AI Translator Pro</b><small>Gemini • Google • Libre</small></div></div>
+  <div class="logo"><div class="logo-icon">✨</div><div><b>AI Translator Pro</b><small>Gemini • Google • Libre</small></div></div>
   <button class="icon-btn" onclick="openSetting()">⚙️</button>
 </div>
 
 <div class="container">
   <div class="ai-card">
-    <div class="robot-wrap" id="robotWrap">
-      <div class="haru" id="haruRobot">
-        <div class="antenna"></div>
-        <div class="head">
-          <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
-          <div class="cheek l"></div><div class="cheek r"></div>
-          <div class="mouth" id="haruMouth"></div>
-        </div>
-        <div class="body">
-          <div class="arm l"></div>
-          <div class="arm r"></div>
-        </div>
-        <div class="legs"><div class="leg"></div><div class="leg"></div></div>
-      </div>
-      <div class="robot-shadow"></div>
-    </div>
     <div class="ai-info">
-      <b><span class="status-dot"></span> Haru - AI Translator</b>
-      <p id="aiStatus">Yo! Gua Haru. Ketik aja, gua translate-in + kasih pinyin-nya biar lu bisa langsung ngomong.</p>
+      <b><span class="status-dot"></span> Shizuku - AI Translator</b>
+      <p id="aiStatus">Hi! Aku Shizuku. Ketik aja, aku translate-in + kasih pinyin-nya biar kamu bisa langsung ngomong.</p>
       <span class="badge" id="detectBadge">Auto-Detect: -</span> <span class="badge" id="apiBadge">API: -</span>
-      <div class="robot-controls">
-        <button onclick="robotAction('greet')">👋 Hai</button>
-        <button onclick="robotAction('happy')">😄 Senang</button>
-        <button onclick="robotAction('think')">🤔 Mikir</button>
+      <div class="shizuku-controls">
+        <button onclick="shizukuAction('greet')">👋 Hai</button>
+        <button onclick="shizukuAction('happy')">😄 Senang</button>
+        <button onclick="shizukuAction('think')">🤔 Mikir</button>
       </div>
     </div>
   </div>
@@ -133,7 +85,7 @@
   </div>
 
   <div class="input-box"><label>✍️ Kamu</label><textarea id="input" placeholder="Contoh: Saya pergi ke pasar"></textarea><div class="input-foot"><span>Enter untuk translate</span><span><span id="charCount">0</span> karakter</span></div></div>
-  <button class="btn-main" onclick="doTranslate()">✨ Translate dengan Haru</button>
+  <button class="btn-main" onclick="doTranslate()">✨ Translate dengan Shizuku</button>
   <div class="chat" id="chat"></div>
   <div class="section-title"><b>🕒 Terakhir diterjemahkan</b><button class="clear" onclick="clearHistory()">Hapus Semua</button></div>
   <div id="histList"></div>
@@ -153,30 +105,11 @@
 </div>
 
 <script>
-let isSpeaking = false;
-function startMouth(){
-  if(isSpeaking) return;
-  isSpeaking = true;
-  document.getElementById('haruRobot').classList.add('speaking');
-  document.getElementById('robotWrap').classList.add('speaking');
-}
-function stopMouth(){
-  isSpeaking = false;
-  document.getElementById('haruRobot').classList.remove('speaking');
-  document.getElementById('robotWrap').classList.remove('speaking');
-}
-function robotAction(type){
-  if(type==='greet') document.getElementById('aiStatus').innerText = 'Yo! Hai juga! Mau translate apa hari ini?';
-  if(type==='happy') document.getElementById('aiStatus').innerText = 'Hehe, gacor! Gas translate lagi!';
+function shizukuAction(type){
+  if(type==='greet') document.getElementById('aiStatus').innerText = 'Hi! Hai juga! Mau translate apa hari ini?';
+  if(type==='happy') document.getElementById('aiStatus').innerText = 'Hehe, seneng banget! Gas translate lagi yuk!';
   if(type==='think') document.getElementById('aiStatus').innerText = 'Hmm... lagi mikir nih...';
-  startMouth(); setTimeout(stopMouth, 1000);
 }
-document.addEventListener('pointermove', (e)=>{
-  const eyes = document.querySelectorAll('.haru .eye');
-  const x = (e.clientX / window.innerWidth - 0.5) * 6;
-  const y = (e.clientY / window.innerHeight - 0.5) * 4;
-  eyes.forEach(eye=>{ eye.style.transform = `translate(${x}px, ${y}px)`; });
-});
 const inputEl = document.getElementById('input');
 const chatEl = document.getElementById('chat');
 const aiStatus = document.getElementById('aiStatus');
@@ -191,7 +124,7 @@ function closeSetting(){ document.getElementById('settingOverlay').classList.rem
 function saveKey(){ const k=document.getElementById('geminiKey').value.trim(); if(!k) return alert('Paste dulu key-nya'); localStorage.setItem('gemini_key',k); document.getElementById('keyStatus').innerText='✅ Key tersimpan!'; document.getElementById('pillGemini').innerText='AKTIF ✅'; setTimeout(closeSetting,600); }
 inputEl.addEventListener('input', ()=>{ document.getElementById('charCount').innerText=inputEl.value.length; });
 function swapLang(){ const dari=document.getElementById('dari'); const ke=document.getElementById('ke'); if(dari.value==='auto') return alert('Matikan Auto Detect dulu'); const tmp=dari.value; dari.value=ke.value; ke.value=tmp; }
-function setAIState(mode,text){ if(mode==='thinking'){ startMouth(); aiStatus.innerText=text||'Hmm, gua lagi mikir translate + cara bacanya...'; } else { stopMouth(); aiStatus.innerText=text||'Beres! Coba baca pinyin-nya, terus pencet 🔊 buat dengerin.'; } }
+function setAIState(mode,text){ if(mode==='thinking'){ aiStatus.innerText=text||'Hmm, aku lagi mikir translate + cara bacanya...'; } else { aiStatus.innerText=text||'Beres! Coba baca pinyin-nya, terus pencet 🔊 buat dengerin.'; } }
 function getPronunciation(text, lang, geminiPron){
   if(geminiPron) return geminiPron;
   try{
@@ -208,10 +141,10 @@ function addAIBubble(translated, api, detected, ke, pron){
   const div=document.createElement('div'); div.className='bubble ai';
   let pronHtml='';
   if(showPron){ pronHtml=`<div class="pron-box"><div class="pron-label">${getPronLabel(ke)}</div><div class="pron-text">${pronText.replace(/</g,'&lt;')}</div><button onclick="speakPron(this)">🔊 Bacain Cara Baca</button></div>`; }
-  div.innerHTML=`<div class="mini">🤖</div><div class="content"><div class="meta">Haru • ${api} • ${LANG_NAMES[detected]||detected}</div><div class="trans-text">${translated.replace(/</g,'&lt;')}</div>${pronHtml}<div class="tools"><button onclick="speakText(this)">🔊 Bacain Asli</button><button onclick="copyText(this)">📋 Copy</button></div></div>`;
+  div.innerHTML=`<div class="mini">✨</div><div class="content"><div class="meta">Shizuku • ${api} • ${LANG_NAMES[detected]||detected}</div><div class="trans-text">${translated.replace(/</g,'&lt;')}</div>${pronHtml}<div class="tools"><button onclick="speakText(this)">🔊 Bacain Asli</button><button onclick="copyText(this)">📋 Copy</button></div></div>`;
   chatEl.appendChild(div); div.scrollIntoView({behavior:'smooth',block:'center'});
 }
-function showTyping(){ const d=document.createElement('div'); d.id='typingBubble'; d.className='bubble ai'; d.innerHTML=`<div class="mini">🤖</div><div class="content"><div class="meta">Haru lagi ngetik...</div><div class="typing"><span></span><span></span><span></span></div></div>`; chatEl.appendChild(d); d.scrollIntoView({behavior:'smooth'}); return d; }
+function showTyping(){ const d=document.createElement('div'); d.id='typingBubble'; d.className='bubble ai'; d.innerHTML=`<div class="mini">✨</div><div class="content"><div class="meta">Shizuku lagi ngetik...</div><div class="typing"><span></span><span></span><span></span></div></div>`; chatEl.appendChild(d); d.scrollIntoView({behavior:'smooth'}); return d; }
 async function translateGemini(text, dari, ke){
   const key = localStorage.getItem('gemini_key') || document.getElementById('geminiKey').value.trim();
   if(!key) throw new Error('Belum ada Gemini Key');
@@ -274,17 +207,13 @@ inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.p
 function speakText(btn){
   const text = btn.closest('.content').querySelector('.trans-text').innerText;
   const ke = document.getElementById('ke').value;
-  startMouth();
   const u = new SpeechSynthesisUtterance(text); u.lang = ke==='zh-CN'?'zh-CN':ke; u.rate=0.85;
-  u.onend = ()=>stopMouth(); u.onerror = ()=>stopMouth();
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 function speakPron(btn){
   const text = btn.closest('.pron-box').querySelector('.pron-text').innerText;
   const ke = document.getElementById('ke').value;
-  startMouth();
   const u = new SpeechSynthesisUtterance(text); u.lang = ke==='zh-CN'?'zh-CN':ke==='ja'?'ja-JP':ke==='ko'?'ko-KR':'en-US'; u.rate=0.75;
-  u.onend = ()=>stopMouth(); u.onerror = ()=>stopMouth();
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 function copyText(btn){ const text = btn.closest('.content').querySelector('.trans-text').innerText; navigator.clipboard.writeText(text); alert('Udah ke-copy!'); }
@@ -296,6 +225,17 @@ function renderHistory(){
 function loadHist(i){ const h=history[i]; if(!h) return; inputEl.value=h.from; document.getElementById('dari').value=h.dari; document.getElementById('ke').value=h.ke; document.getElementById('charCount').innerText=h.from.length; addUserBubble(h.from); addAIBubble(h.to,'History',h.dari,h.ke,h.pron); }
 function clearHistory(){ history=[]; localStorage.removeItem('trans_history'); renderHistory(); }
 renderHistory();
+</script>
+
+<!-- Shizuku Live2D - Pojok kanan bawah -->
+<script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
+<script>
+L2Dwidget.init({
+  model: { jsonPath: 'https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json' },
+  display: { position: 'right', width: 150, height: 210, hOffset: 0, vOffset: -10 },
+  mobile: { show: true, scale: 0.8 },
+  react: { opacityDefault: 1, opacityOnHover: 1 }
+});
 </script>
 </body>
 </html>
