@@ -6,47 +6,41 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Tebak bahasa sendiri, karena MyMemory gak support "auto"
-function detectLang(text) {
-  if (/[\u4E00-\u9FFF]/.test(text)) return 'zh-CN'; // Mandarin
-  if (/[\u3040-\u30FF]/.test(text)) return 'ja'; // Jepang Hiragana/Katakana
-  if (/[\uAC00-\uD7AF]/.test(text)) return 'ko'; // Korea Hangul
-  if (/[\u0400-\u04FF]/.test(text)) return 'ru'; // Rusia
-  if (/[\u00E0-\u00FF\u00C0-\u00DF]/.test(text) && /\b(je|tu|vous|les|des|pour|avec)\b/i.test(text)) return 'fr';
-  if (/\b(soy|estoy|quiero|gracias|hola|por favor)\b/i.test(text)) return 'es';
-
-  // Indonesia - cek kata khas Indo
-  if (/\b(saya|aku|kamu|dia|mereka|kita|mau|pergi|kerja|kantor|makan|tidur|rumah|tidak|nggak|udah|lagi|bisa|tolong|terima|kasih|selamat|apa|siapa|dimana|kapan|kenapa|bagaimana|dan|yang|itu|ini|dari|ke|di)\b/i.test(text)) return 'id';
-
-  // Default Inggris
-  return 'en';
-}
-
 const LANG_NAMES = {
   'id': 'Indonesia', 'en': 'Inggris', 'zh-CN': 'Mandarin',
-  'ja': 'Jepang', 'ko': 'Korea', 'es': 'Spanyol', 'fr': 'Perancis', 'ru': 'Rusia'
+  'ja': 'Jepang', 'ko': 'Korea', 'es': 'Spanyol', 'fr': 'Perancis', 'ru': 'Rusia', 'auto': 'Auto'
 };
 
 app.post('/api/translate', async (req, res) => {
   let { text, dari, ke } = req.body;
   try {
-    // Kalau auto, tebak dulu
-    let detectedCode = dari;
-    if (dari === 'auto') {
-      detectedCode = detectLang(text);
+    // Google Translate gratis, support auto beneran
+    // dari = auto juga boleh
+    const sl = dari === 'auto' ? 'auto' : dari;
+    // Google maunya zh-CN jadi zh-CN, tapi di endpoint ini pake zh-CN tetep jalan, kita map ke zh
+    const tl = ke === 'zh-CN' ? 'zh-CN' : ke;
+
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const data = await r.json();
+
+    // data[0] isinya potongan translate, kita gabungin
+    let translated = '';
+    if (Array.isArray(data[0])) {
+      translated = data[0].map(part => part[0]).join('');
     }
 
-    const langpair = `${detectedCode}|${ke}`;
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langpair}`;
-    const r = await fetch(url);
-    const data = await r.json();
-    
+    // data[2] itu bahasa yang kedetect sama Google
+    let detectedCode = dari;
+    if (data[2]) detectedCode = data[2];
+
     res.json({
-      translated: data.responseData?.translatedText || '',
+      translated: translated,
       detected: LANG_NAMES[detectedCode] || detectedCode,
       detectedCode: detectedCode
     });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: e.message });
   }
 });
