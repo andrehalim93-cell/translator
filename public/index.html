@@ -9,6 +9,7 @@
   body{font-family:sans-serif;background:#0f0f0f;color:#fff;padding:16px;max-width:650px;margin:auto}
   h2{text-align:center;margin:5px 0 15px}
   textarea{width:100%;height:110px;padding:12px;font-size:16px;border-radius:12px;border:none;background:#222;color:#fff;resize:none}
+  input.key{width:100%;padding:10px;border-radius:10px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:13px;margin-bottom:8px}
   .row{display:flex;gap:8px;margin-top:10px;align-items:center}
   select{flex:1;padding:12px;border-radius:10px;border:none;background:#222;color:#fff;font-size:15px}
   .swap{background:#333;color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer}
@@ -22,14 +23,24 @@
   .hist-item small{color:#888}
   .topbar{display:flex;justify-content:space-between;align-items:center}
   .clear{ background:none;border:none;color:#ff6b6b;cursor:pointer;font-size:13px }
+  .keybox{background:#1a1a1a;padding:10px;border-radius:12px;margin-bottom:10px}
+  .keybox small{color:#888}
 </style>
 </head>
 <body>
 
 <h2>🌐 AI Translator Pro</h2>
-<div style="text-align:center"><span class="badge" id="detectBadge">Auto-Detect: -</span></div>
+<div style="text-align:center"><span class="badge" id="detectBadge">Auto-Detect: -</span> <span class="badge" id="apiBadge">API: -</span></div>
+<br>
 
-<textarea id="input" placeholder="Ketik / paste disini...&#10;Contoh: Saya mau pergi ke pasar"></textarea>
+<div class="keybox">
+  <small>🔑 Gemini API Key (gratis, bikin di aistudio.google.com)</small>
+  <input class="key" id="geminiKey" placeholder="Paste AIzaSy... disini, sekali aja" />
+  <button onclick="saveKey()" style="width:100%;padding:8px;border:none;border-radius:8px;background:#4285F4;color:#fff;font-weight:bold;cursor:pointer">Simpan Key</button>
+  <small id="keyStatus" style="color:#25D366"></small>
+</div>
+
+<textarea id="input" placeholder="Ketik / paste disini...&#10;Contoh: Saya pergi ke pasar, anjir gacor banget"></textarea>
 <div style="text-align:right;font-size:12px;color:#888"><span id="charCount">0</span> karakter</div>
 
 <div class="row">
@@ -72,14 +83,29 @@
 <script>
 const inputEl = document.getElementById('input');
 const hasilEl = document.getElementById('hasil');
+const LANG_NAMES = { 'id':'Indonesia','en':'Inggris','zh':'Mandarin','zh-CN':'Mandarin','ja':'Jepang','ko':'Korea','es':'Spanyol','fr':'Perancis','auto':'Auto' };
+const LANG_FULL = { 'id':'Indonesian','en':'English','zh-CN':'Chinese (Simplified)','ja':'Japanese','ko':'Korean','es':'Spanish','fr':'French','auto':'Auto Detect' };
+
 let history = [];
 try {
   history = JSON.parse(localStorage.getItem('trans_history') || '[]');
   if (!Array.isArray(history)) history = [];
-  // Bersihin history rusak dari versi lama
-  history = history.filter(h => h && h.from && h.to);
-} catch(e) {
-  history = [];
+  history = history.filter(h => h && h.from && h.to && !String(h.to).toUpperCase().includes('MYMEMORY'));
+} catch(e) { history = []; }
+
+// Load key yg tersimpan
+const savedKey = localStorage.getItem('gemini_key') || '';
+if (savedKey) {
+  document.getElementById('geminiKey').value = savedKey;
+  document.getElementById('keyStatus').innerText = '✅ Key tersimpan, Gemini aktif sebagai No.1';
+}
+
+function saveKey() {
+  const k = document.getElementById('geminiKey').value.trim();
+  if (!k) return alert('Paste dulu key-nya');
+  localStorage.setItem('gemini_key', k);
+  document.getElementById('keyStatus').innerText = '✅ Key tersimpan! Sekarang translate pake Gemini';
+  alert('Key udah ke-save!');
 }
 
 inputEl.addEventListener('input', () => {
@@ -91,10 +117,69 @@ function swapLang() {
   const ke = document.getElementById('ke');
   if (dari.value === 'auto') return alert('Matikan Auto Detect dulu buat swap');
   const tmp = dari.value; dari.value = ke.value; ke.value = tmp;
-  const curHasil = hasilEl.innerText;
-  if (curHasil && curHasil !== 'Hasil muncul disini...' && !curHasil.startsWith('Error')) {
-    inputEl.value = curHasil;
+  const cur = hasilEl.innerText;
+  if (cur && cur !== 'Hasil muncul disini...' && !cur.startsWith('Error') && !cur.startsWith('Gagal')) inputEl.value = cur;
+}
+
+// ===== NO.1 GEMINI - AI BENERAN =====
+async function translateGemini(text, dari, ke) {
+  const key = localStorage.getItem('gemini_key') || document.getElementById('geminiKey').value.trim();
+  if (!key) throw new Error('Belum ada Gemini Key');
+  const targetLang = LANG_FULL[ke] || ke;
+  const sourceLang = dari === 'auto' ? 'Auto Detect the source language' : LANG_FULL[dari];
+  const prompt = `You are a professional translator. Translate the following text from ${sourceLang} to ${targetLang}. Keep slang, tone, and meaning natural, not word-by-word. Return ONLY the translation, no explanation, no quotes, no markdown.\n\nText: """${text}"""`;
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  const data = await r.json();
+  if (data.error) throw new Error('Gemini: ' + (data.error.message || 'gagal'));
+  const translated = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  if (!translated) throw new Error('Gemini kosong');
+  return { translated, detected: dari, api: 'Gemini AI ✨' };
+}
+
+// ===== NO.2 GOOGLE =====
+async function translateGoogle(text, dari, ke) {
+  const sl = dari === 'auto' ? 'auto' : dari;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${ke}&dt=t&q=${encodeURIComponent(text)}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('Google gagal');
+  const translated = data[0].map(p => p && p[0] ? p[0] : '').join('');
+  if (!translated) throw new Error('Google kosong');
+  return { translated, detected: data[2] || dari, api: 'Google' };
+}
+
+// ===== NO.3 LIBRE =====
+async function translateLibre(text, dari, ke) {
+  const map = (l) => l === 'zh-CN' ? 'zh' : l;
+  const r = await fetch('https://translate.argosopentech.com/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: text, source: map(dari), target: map(ke), format: 'text' })
+  });
+  const data = await r.json();
+  if (!data.translatedText) throw new Error('Libre gagal');
+  return { translated: data.translatedText, detected: dari, api: 'Libre' };
+}
+
+// ===== NO.4 MYMEMORY =====
+async function translateMyMemory(text, dari, ke) {
+  let src = dari;
+  if (src === 'auto') {
+    if (/[\u4E00-\u9FFF]/.test(text)) src = 'zh-CN';
+    else if (/[\u3040-\u30FF]/.test(text)) src = 'ja';
+    else if (/[\uAC00-\uD7AF]/.test(text)) src = 'ko';
+    else if (/\b(saya|aku|mau|pergi|kerja|kantor|makan|pasar)\b/i.test(text)) src = 'id';
+    else src = 'en';
   }
+  const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${ke}`);
+  const data = await r.json();
+  const translated = data.responseData?.translatedText || '';
+  if (!translated || translated.toUpperCase().includes('MYMEMORY WARNING') || translated.toUpperCase().includes('YOU USED ALL')) throw new Error('MyMemory limit');
+  return { translated, detected: src, api: 'MyMemory' };
 }
 
 async function doTranslate() {
@@ -102,33 +187,25 @@ async function doTranslate() {
   const dari = document.getElementById('dari').value;
   const ke = document.getElementById('ke').value;
   if (!text) return hasilEl.innerText = 'Isi dulu teksnya bro';
-  hasilEl.innerText = 'Lagi translate...';
+  hasilEl.innerText = 'Lagi translate pake AI...';
 
-  try {
-    const res = await fetch('/api/translate', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ text, dari, ke })
-    });
-    const data = await res.json();
-    const translated = data.translated || '';
-    if (!translated) {
-      hasilEl.innerText = 'Gagal translate, coba lagi';
+  const methods = [translateGemini, translateGoogle, translateLibre, translateMyMemory];
+  for (const fn of methods) {
+    try {
+      const result = await fn(text, dari, ke);
+      hasilEl.innerText = result.translated;
+      document.getElementById('detectBadge').innerText = 'Auto-Detect: ' + (LANG_NAMES[result.detected] || result.detected);
+      document.getElementById('apiBadge').innerText = 'API: ' + result.api;
+      history.unshift({ from: text, to: result.translated, dari, ke, time: new Date().toLocaleTimeString() });
+      history = history.slice(0, 20);
+      localStorage.setItem('trans_history', JSON.stringify(history));
+      renderHistory();
       return;
+    } catch(e) {
+      console.log(fn.name, 'gagal:', e.message);
     }
-    hasilEl.innerText = translated;
-
-    if (data.detected) {
-      document.getElementById('detectBadge').innerText = 'Auto-Detect: ' + data.detected;
-    }
-
-    history.unshift({ from: text, to: translated, dari, ke, time: new Date().toLocaleTimeString() });
-    history = history.slice(0, 20);
-    localStorage.setItem('trans_history', JSON.stringify(history));
-    renderHistory();
-  } catch(e) {
-    hasilEl.innerText = 'Error: ' + e.message;
   }
+  hasilEl.innerText = 'Gagal translate. Kalau pake Gemini, cek API Key lu udah bener belum, terus coba lagi.';
 }
 
 inputEl.addEventListener('keydown', e => {
@@ -142,19 +219,15 @@ function speak(type) {
   const ke = document.getElementById('ke').value;
   let lang = type === 'input' ? dari : ke;
   if (lang === 'auto') lang = 'id-ID';
-  if (lang === 'zh-CN') lang = 'zh-CN';
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang;
-  u.rate = 0.9;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
+  u.lang = lang; u.rate = 0.9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 
 function copyHasil() {
   const t = hasilEl.innerText;
   if (!t || t.includes('Hasil muncul')) return;
-  navigator.clipboard.writeText(t);
-  alert('Udah ke-copy!');
+  navigator.clipboard.writeText(t); alert('Udah ke-copy!');
 }
 
 function renderHistory() {
@@ -169,8 +242,7 @@ function renderHistory() {
 }
 
 function loadHist(i) {
-  const h = history[i];
-  if (!h) return;
+  const h = history[i]; if (!h) return;
   inputEl.value = h.from;
   document.getElementById('dari').value = h.dari;
   document.getElementById('ke').value = h.ke;
@@ -178,10 +250,7 @@ function loadHist(i) {
   document.getElementById('charCount').innerText = h.from.length;
 }
 
-function clearHistory() {
-  history = []; localStorage.removeItem('trans_history'); renderHistory();
-}
-
+function clearHistory() { history = []; localStorage.removeItem('trans_history'); renderHistory(); }
 renderHistory();
 </script>
 </body>
